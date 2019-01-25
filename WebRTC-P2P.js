@@ -3,18 +3,21 @@ const CFG_CONNECTION = {iceServers: [{urls: ['stun:stun.l.google.com:19302']}]};
 const peers = [];
 
 function uid() {
-  return Number(Math.random()*100000000000000000).toString(36);
+  return Number(Math.random() * 100000000000000000).toString(36);
 }
 
 async function host() {
   const peer = new RTCPeerConnection(CFG_CONNECTION);
-  const channel = peer.createDataChannel('data-level-counter');
+
+  const channel = peer.createDataChannel('default');
   const ping = peer.createDataChannel('ping');
 
-  ping.addEventListener('message', event => console.log('SUCCESS, connection established !'));
+  peer.channels = new Map([
+    [channel.label, channel],
+    [ping.label, ping],
+  ]);
 
-  // attach channel on peer
-  peer.channel = channel;
+  ping.addEventListener('message', event => console.log('SUCCESS, connection established !'));
 
   channel.addEventListener('open', event => {
     console.log(`channel ${channel.label} is ready`, event)
@@ -27,7 +30,9 @@ async function host() {
     peers.forEach(other => {
       if (other === peer) return;
 
-      other.channel.send(event.data);
+      const otherChan = other.channels.get(channel.label);
+
+      otherChan && otherChan.send(event.data);
     });
   });
 
@@ -60,8 +65,10 @@ async function host() {
     } catch (error) {
       console.error(error);
 
-      ping.close();
-      channel.close();
+      for (const channel of peer.channels.values()) {
+        channel.close()
+      }
+
       peer.close();
     }
   }
@@ -69,13 +76,14 @@ async function host() {
 
 async function join(offer) {
   const peer = new RTCPeerConnection(CFG_CONNECTION);
-  let channel, ping;
+  peer.channels = new Map();
 
   peer.addEventListener('datachannel', event => {
-    switch (event.channel.label) {
-      case 'data-level-counter':
-        peer.channel = channel = event.channel;
+    const channel = event.channel;
+    peer.channels.set(channel.label, channel);
 
+    switch (event.channel.label) {
+      case 'default':
         channel.addEventListener('open', event => {
           console.log(`channel ${channel.label} is ready`, event)
         });
@@ -87,17 +95,18 @@ async function join(offer) {
           peers.forEach(other => {
             if (other === peer) return;
 
-            other.channel && other.channel.send(event.data);
+            const otherChan = other.channels.get(channel.label);
+
+            otherChan && otherChan.send(event.data);
           });
         });
 
         break;
       case 'ping':
-        ping = event.channel;
-        ping.addEventListener('message', event => {
+        channel.addEventListener('message', event => {
           console.log('SUCCESS, connection established !');
 
-          ping.send('pong');
+          channel.send('pong');
         });
         break;
     }
@@ -119,8 +128,10 @@ async function join(offer) {
   } catch (error) {
     console.error(error);
 
-    ping && ping.close();
-    channel && channel.close();
+    for (const channel of peer.channels.values()) {
+      channel.close()
+    }
+
     peer.close();
   }
 }
