@@ -5,14 +5,61 @@ const app = new Vue({
   el: '#level-counter',
   data: {
     players: [new Player(), new Player(), new Player()],
-    selected: null,
+    get selected() {
+      return this.l.selected[0];
+    },
+    set selected(player) {
+      this.l.selected[0] = player
+    },
     roll: 6,
+    l: {
+      selected: [],
+      showLeft: false,
+      showRight: false,
+    },
+    playersColumns: [
+      {
+        name: 'id',
+        field: 'id',
+      },
+      {
+        name: 'name',
+        field: 'name',
+        label: 'Name',
+        align: 'left',
+        sortable: true,
+      },
+      {
+        name: 'level',
+        field: 'level',
+        label: 'Level',
+        align: 'right',
+        sortable: true,
+      },
+      {
+        name: 'force',
+        field: 'force',
+        label: 'Force',
+        align: 'right',
+        sortable: true,
+      },
+    ],
   },
   created() {
     this.select(this.players[0]);
     this.rollDice();
   },
   methods: {
+    rollIcon() {
+      switch(this.roll) {
+        case 1:
+          return 'looks_one';
+        case 2:
+          return 'looks_two';
+        default:
+          return `looks_${this.roll}`;
+      }
+    },
     addPlayer() {
       const player = new Player();
       this.players.push(player);
@@ -21,7 +68,9 @@ const app = new Vue({
       this.select(player);
     },
     select(player) {
-      this.selected = player
+      this.selected = player;
+      
+      this.$refs.players.selected = player;
     },
     isActive(player) {
       return this.selected === player

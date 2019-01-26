@@ -4,108 +4,94 @@
     <meta charset="UTF-8">
     <title>Munchkin Level Counter</title>
 
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@^2.0.0/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/quasar-framework@0.17.19/dist/umd/quasar.mat.min.css" rel="stylesheet" type="text/css">
+
+    <link href="styles.css" rel="stylesheet" type="text/css">
+
+    <script>
+        window.quasarConfig = {
+            brand: {
+                primary: '#e46262',
+            },
+        }
+    </script>
+
     <script defer src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/quasar-framework@0.17.19/dist/umd/quasar.mat.umd.min.js"></script>
+
     <script defer src="WebRTC-P2P.js"></script>
     <script defer src="Player.class.js"></script>
     <script defer src="ui.js"></script>
-
-    <style>
-        html {
-            box-sizing: border-box;
-        }
-        *, *::after, *::before {
-            box-sizing: border-box;
-        }
-
-        .color-bubble {
-            display: inline-block;
-            border-radius: 50%;
-            height: 1rem;
-            width: 1rem;
-        }
-        .selected-player label {
-            display: block;
-        }
-
-        table {
-            border-spacing: 0;
-        }
-        table td {
-            border-top: 1px solid transparent;
-            border-bottom: 1px solid transparent;
-        }
-        table td:first-of-type {
-            border-left: 1px solid transparent;
-        }
-        table td:last-of-type {
-            border-right: 1px solid transparent;
-        }
-        table .active td {
-            border-top: 1px solid black;
-            border-bottom: 1px solid black;
-        }
-        table .active td:first-of-type {
-            border-left: 1px solid black;
-        }
-        table .active td:last-of-type {
-            border-right: 1px solid black;
-        }
-    </style>
 </head>
 <body>
     <div id="level-counter">
-        <button v-on:click="addPlayer">Add Player</button>
-        <label>Dice roll <button v-on:click="rollDice">{{ roll }}</button></label>
+        <q-layout>
+            <q-layout-header>
+                <q-toolbar>
+                    <!-- showLeft is a model attached to left side drawer below -->
+                    <q-btn flat round dense
+                           @click="l.showLeft = !l.showLeft"
+                           icon="menu"></q-btn>
 
-        <table>
-            <thead>
-            <tr>
-                <th></th>
-                <th>name</th>
-                <th>level</th>
-                <th>force</th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="player in players" v-on:click="select(player)" v-bind:class="{active: isActive(player)}">
-                <td></td>
-                <td><span class='color-bubble' v-bind:style="{background: player.color}">&nbsp;</span> {{ player.name }}</td>
-                <td>{{ player.level }}</td>
-                <td>{{ player.force }}</td>
-                <td></td>
-            </tr>
+                    <q-toolbar-title>
+                        Level Counter
+                    </q-toolbar-title>
 
-            <tr>
-                <td><button v-on:click="previous"><</button></td>
-                <td colspan="3">
-                    <span v-if="selected">
-                        <span class='color-bubble' v-bind:style="{background: selected.color}">&nbsp;</span>
-                        {{ selected.name }}
-                    </span>
-                </td>
-                <td><button v-on:click="next">></button></td>
-            </tr>
-            </tbody>
-        </table>
+                    <q-btn flat round icon="person_add" @click="addPlayer" title="Add Player"></q-btn>
+                    <q-btn flat round :icon="rollIcon()" @click="rollDice" wait-for-ripple></q-btn>
+                </q-toolbar>
+            </q-layout-header>
 
-        <div class="selected-player" v-if="selected">
-            <label>Name <input type="text" min="1" v-model="selected.name"></label>
-            <label>Level <input type="number" min="1" v-model.number="selected.level"></label>
-            <label>Stuff <input type="number" min="0" v-model.number="selected.stuff"></label>
-            <label>Modifier <input type="number" v-model.number="selected.modifier"></label>
-            <button v-on:click="selected.switch()">{{ selected.sex }}</button>
-            <button v-on:click="removePlayer()">x</button>
-        </div>
+            <!-- optional -->
+            <q-layout-drawer side="left" v-model="l.showLeft">
+                <div class="about">
+                    <p>This is an experiment in VueJS (and WebRTC P2P, work but not already implemented)</p>
+                    <p>For a web-app (TODO PWA) of a level counter for <a href="http://www.worldofmunchkin.com/game/" target="_blank">munchkin game</a></p>
+                    <p>For now, It's ugly, but it work for basic functionnality</p>
+                    <p><a href="https://github.com/munckin-level-counter/munckin-level-counter.github.io">Source code</a></p>
+                </div>
+            </q-layout-drawer>
+
+            <q-page-container>
+
+                <q-table title="Players" ref="players" :data.sync="players"
+                         :columns="playersColumns" :visible-columns="['name', 'level', 'force']"
+                         selection="single" :selected.sync="l.selected"
+                         row-key="id" :rows-per-page-options="[]">
+                    <q-td slot="body-cell-name" slot-scope="props" :props="props">
+                        <span class='color-bubble' :style="{background: props.row.color}">&nbsp;</span>
+                        {{ props.row.name }}
+                    </q-td>
+
+                    <div slot="bottom" slot-scope="props" class="row flex-justify-between fit">
+                        <q-btn
+                                round dense icon="chevron_left" color="primary"
+                                class="q-mr-md" @click="previous"
+                        ></q-btn>
+                        <q-btn
+                                round dense icon="chevron_right" color="primary"
+                                @click="next"
+                        ></q-btn>
+                    </div>
+                </q-table>
+
+                <div class="selected-player" v-if="selected">
+                    <label>Name <input type="text" min="1" v-model="selected.name"></label>
+                    <label>Level <input type="number" min="1" v-model.number="selected.level"></label>
+                    <label>Stuff <input type="number" min="0" v-model.number="selected.stuff"></label>
+                    <label>Modifier <input type="number" v-model.number="selected.modifier"></label>
+                    <button v-on:click="selected.switch()">{{ selected.sex }}</button>
+                    <button v-on:click="removePlayer()">x</button>
+                </div>
+            </q-page-container>
+
+            <!-- optional -->
+            <q-layout-footer>
+            </q-layout-footer>
+        </q-layout>
     </div>
 
-    <hr>
-
-    <div class="about">
-        <p>This is an experiment in VueJS (and WebRTC P2P, work but not already implemented)</p>
-        <p>For a web-app (TODO PWA) of a level counter for <a href="http://www.worldofmunchkin.com/game/" target="_blank">munchkin game</a></p>
-        <p>For now, It's ugly, but it work for basic functionnality</p>
-        <p><a href="https://github.com/munckin-level-counter/munckin-level-counter.github.io">Source code</a></p>
-    </div>
 </body>
 </html>

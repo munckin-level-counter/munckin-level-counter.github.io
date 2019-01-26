@@ -1,0 +1,41 @@
+html {
+    box-sizing: border-box;
+}
+*, *::after, *::before {
+    box-sizing: border-box;
+}
+
+.color-bubble {
+    display: inline-block;
+    border-radius: 50%;
+    height: 1rem;
+    width: 1rem;
+    margin-right: 1rem;
+}
+.selected-player label {
+    display: block;
+}
+
+table {
+    border-spacing: 0;
+}
+table td {
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+}
+table td:first-of-type {
+    border-left: 1px solid transparent;
+}
+table td:last-of-type {
+    border-right: 1px solid transparent;
+}
+table .active td {
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+}
+table .active td:first-of-type {
+    border-left: 1px solid black;
+}
+table .active td:last-of-type {
+    border-right: 1px solid black;
+}
