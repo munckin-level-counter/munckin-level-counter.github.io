@@ -70,7 +70,7 @@ const app = new Vue({
     select(player) {
       this.selected = player;
       
-      this.$refs.players.selected = player;
+      this.$refs.players && (this.$refs.players.selected = player);
     },
     isActive(player) {
       return this.selected === player

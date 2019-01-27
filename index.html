@@ -13,7 +13,7 @@
     <script>
         window.quasarConfig = {
             brand: {
-                primary: '#e46262',
+                // primary: '#e46262',
             },
         }
     </script>
@@ -65,11 +65,14 @@
                         {{ props.row.name }}
                     </q-td>
 
-                    <div slot="bottom" slot-scope="props" class="row flex-justify-between fit">
+                    <div slot="bottom" slot-scope="props" class="row justify-between items-center fit">
                         <q-btn
                                 round dense icon="chevron_left" color="primary"
                                 class="q-mr-md" @click="previous"
                         ></q-btn>
+
+                        <h5 class="flex items-center" style="margin: 0"><span class='color-bubble' :style="{background: selected.color}">&nbsp;</span> {{ selected.name }}</h5>
+
                         <q-btn
                                 round dense icon="chevron_right" color="primary"
                                 @click="next"
@@ -78,12 +81,18 @@
                 </q-table>
 
                 <div class="selected-player" v-if="selected">
-                    <label>Name <input type="text" min="1" v-model="selected.name"></label>
-                    <label>Level <input type="number" min="1" v-model.number="selected.level"></label>
-                    <label>Stuff <input type="number" min="0" v-model.number="selected.stuff"></label>
-                    <label>Modifier <input type="number" v-model.number="selected.modifier"></label>
-                    <button v-on:click="selected.switch()">{{ selected.sex }}</button>
-                    <button v-on:click="removePlayer()">x</button>
+                    <q-input stack-label="Name" v-model="selected.name"></q-input>
+                    <q-input stack-label="Level" v-model="selected.level"
+                             type="number" min="1"
+                             :after="[{icon: 'add', handler () {selected.level += 1}}, {icon: 'remove', handler () {selected.level -= 1}}]"></q-input>
+                    <q-input stack-label="Stuff" v-model="selected.stuff"
+                             type="number" min="0"
+                             :after="[{icon: 'add', handler () {selected.stuff += 1}}, {icon: 'remove', handler () {selected.stuff -= 1}}]"></q-input>
+                    <q-input stack-label="Modifier" v-model="selected.modifier"
+                             type="number"
+                             :after="[{icon: 'add', handler () {selected.modifier += 1}}, {icon: 'remove', handler () {selected.modifier -= 1}}]"></q-input>
+                    <q-btn :label="selected.sex" @click="selected.switch()"></q-btn>
+                    <q-btn icon="delete_forever" @click="removePlayer()"></q-btn>
                 </div>
             </q-page-container>
 

@@ -33,5 +33,5 @@ class Player {
   }
 }
 
-Player.MALE = '♂';
-Player.FEMALE = '♀';
+Player.MALE = '♂️';
+Player.FEMALE = '♀️';
