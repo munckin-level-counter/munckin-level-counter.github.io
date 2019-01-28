@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Munchkin Level Counter</title>
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css">
@@ -56,7 +57,7 @@
 
             <q-page-container>
 
-                <q-table title="Players" ref="players" :data.sync="players"
+                <q-table ref="players" :data.sync="players" class="q-ma-md"
                          :columns="playersColumns" :visible-columns="['name', 'level', 'force']"
                          selection="single" :selected.sync="l.selected"
                          row-key="id" :rows-per-page-options="[]">
@@ -80,7 +81,8 @@
                     </div>
                 </q-table>
 
-                <div class="selected-player" v-if="selected">
+                <div class="selected-player q-ma-md" v-if="selected">
+                    <q-color stack-label="Color" v-model="selected.color"></q-color>
                     <q-input stack-label="Name" v-model="selected.name"></q-input>
                     <q-input stack-label="Level" v-model="selected.level"
                              type="number" min="1"
