@@ -105,6 +105,38 @@ const app = new Vue({
     },
     rollDice() {
       this.roll = Math.floor(Math.random() * 6) + 1
+    },
+    inviteFriend() {
+      const quasar = this.$q;
+      
+      host({
+        displayInvitation: (invitation) => {
+          return quasar.dialog({
+            title: 'Send this message to your friend :',
+            message: JSON.stringify(invitation)
+          });
+        },
+        provideResponse: () => quasar.dialog({
+          title: 'Put message from your friend :',
+          prompt: {
+            type: 'textarea',
+          },
+        }).then(JSON.parse)
+      }).catch(console.error)
+    },
+    joinFriend() {
+      const quasar = this.$q;
+  
+      quasar.dialog({
+        title: 'Paste the message provided by your friend',
+        prompt: {
+          type: 'textarea',
+        }
+      }).then(JSON.parse)
+        .then(offer => join(offer, response => quasar.dialog({
+          title: 'Send this response to your friend :',
+          message: JSON.stringify(response)
+        })));
     }
   }
 });

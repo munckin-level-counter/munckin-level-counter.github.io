@@ -40,24 +40,32 @@
                         Level Counter
                     </q-toolbar-title>
 
-                    <q-btn flat round icon="person_add" @click="addPlayer" title="Add Player"></q-btn>
+                    <q-btn flat round icon="person_add" @click="addPlayer" title="Add Player" class="q-mr-sm"></q-btn>
                     <q-btn flat round :icon="rollIcon()" @click="rollDice" wait-for-ripple></q-btn>
                 </q-toolbar>
             </q-layout-header>
 
             <!-- optional -->
             <q-layout-drawer side="left" v-model="l.showLeft">
-                <div class="about">
-                    <p>This is an experiment in VueJS (and WebRTC P2P, work but not already implemented)</p>
-                    <p>For a web-app (TODO PWA) of a level counter for <a href="http://www.worldofmunchkin.com/game/" target="_blank">munchkin game</a></p>
-                    <p>For now, It's ugly, but it work for basic functionnality</p>
-                    <p><a href="https://github.com/munckin-level-counter/munckin-level-counter.github.io">Source code</a></p>
+                <div class="layout-drawer-container q-pa-md">
+                    <div class="social column q-mb-md">
+                        <q-btn @click="inviteFriend" label="Invite friend"></q-btn>
+                        <q-btn @click="joinFriend" label="Join friend"></q-btn>
+                    </div>
+
+                    <hr>
+
+                    <div class="about q-mt-md">
+                        <p>This is an experiment in VueJS (and WebRTC P2P, work but not already implemented)</p>
+                        <p>For a web-app (TODO PWA) of a level counter for <a href="http://www.worldofmunchkin.com/game/" target="_blank">munchkin game</a></p>
+                        <p>For now, It's ugly, but it work for basic functionnality</p>
+                        <p><a href="https://github.com/munckin-level-counter/munckin-level-counter.github.io">Source code</a></p>
+                    </div>
                 </div>
             </q-layout-drawer>
 
-            <q-page-container>
-
-                <q-table ref="players" :data.sync="players" class="q-ma-md"
+            <q-page-container class="q-pa-md">
+                <q-table ref="players" :data.sync="players" class="q-my-md"
                          :columns="playersColumns" :visible-columns="['name', 'level', 'force']"
                          selection="single" :selected.sync="l.selected"
                          row-key="id" :rows-per-page-options="[]">
@@ -81,7 +89,7 @@
                     </div>
                 </q-table>
 
-                <div class="selected-player q-ma-md" v-if="selected">
+                <form class="selected-player" v-if="selected">
                     <q-color stack-label="Color" v-model="selected.color"></q-color>
                     <q-input stack-label="Name" v-model="selected.name"></q-input>
                     <q-input stack-label="Level" v-model="selected.level"
@@ -93,9 +101,9 @@
                     <q-input stack-label="Modifier" v-model="selected.modifier"
                              type="number"
                              :after="[{icon: 'add', handler () {selected.modifier += 1}}, {icon: 'remove', handler () {selected.modifier -= 1}}]"></q-input>
-                    <q-btn :label="selected.sex" @click="selected.switch()"></q-btn>
-                    <q-btn icon="delete_forever" @click="removePlayer()"></q-btn>
-                </div>
+                    <q-btn round @click="selected.switch()">{{ selected.sex }}</q-btn>
+                    <q-btn round icon="delete_forever" @click="removePlayer()"></q-btn>
+                </form>
             </q-page-container>
 
             <!-- optional -->

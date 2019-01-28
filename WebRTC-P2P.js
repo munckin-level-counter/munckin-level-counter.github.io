@@ -1,4 +1,9 @@
-const CFG_CONNECTION = {iceServers: [{urls: ['stun:stun.l.google.com:19302']}]};
+const CFG_CONNECTION = {
+  iceServers: [
+    {urls: ['stun:stun2.l.google.com:19302']},
+    {urls: ['stun:stun.stunprotocol.org:3478']},
+  ]
+};
 
 const peers = [];
 
@@ -6,8 +11,9 @@ function uid() {
   return Number(Math.random() * 100000000000000000).toString(36);
 }
 
-async function host() {
+async function host({displayInvitation=console.log, provideResponse=Promise.reject(new Error('provideResponse not provided'))}={}) {
   const peer = new RTCPeerConnection(CFG_CONNECTION);
+  window.peer = peer;
 
   const channel = peer.createDataChannel('default');
   const ping = peer.createDataChannel('ping');
@@ -41,8 +47,10 @@ async function host() {
 
     console.log('Invitation message :');
     console.log(JSON.stringify(peer.localDescription));
-
-    confirmHandshake().catch(console.error)
+    
+    Promise.resolve(displayInvitation(peer.localDescription))
+      .then(confirmHandshake)
+      .catch(console.error);
   });
 
   // start handshake
@@ -50,14 +58,9 @@ async function host() {
   await peer.setLocalDescription(description);
 
   async function confirmHandshake() {
-    let answer = null;
-    do {
-      answer = prompt('Put answer response :')
-    }
-    while (!answer);
-
     try {
-      await peer.setRemoteDescription(JSON.parse(answer));
+      const answer = await provideResponse();
+      await peer.setRemoteDescription(answer);
 
       peers.push(peer);
 
@@ -69,13 +72,14 @@ async function host() {
         channel.close()
       }
 
-      peer.close();
+      return peer.close();
     }
   }
 }
 
-async function join(offer) {
+async function join(offer, sendResponse) {
   const peer = new RTCPeerConnection(CFG_CONNECTION);
+  window.peer = peer;
   peer.channels = new Map();
 
   peer.addEventListener('datachannel', event => {
@@ -117,6 +121,8 @@ async function join(offer) {
 
     console.log('Answer response :');
     console.log(JSON.stringify(peer.localDescription));
+  
+    sendResponse(peer.localDescription);
   });
 
   try {
