@@ -2,7 +2,7 @@ const CFG_CONNECTION = {
   iceServers: [
     {urls: ['stun:stun2.l.google.com:19302']},
     {urls: ['stun:stun.stunprotocol.org:3478']},
-  ]
+  ],
 };
 
 const peers = [];
