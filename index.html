@@ -24,6 +24,7 @@
 
     <script defer src="WebRTC-P2P.js"></script>
     <script defer src="Player.class.js"></script>
+    <script defer src="PlayerForm.vue.js"></script>
     <script defer src="ui.js"></script>
 </head>
 <body>
@@ -89,21 +90,7 @@
                     </div>
                 </q-table>
 
-                <form class="selected-player" v-if="selected">
-                    <q-color stack-label="Color" v-model="selected.color"></q-color>
-                    <q-input stack-label="Name" v-model="selected.name"></q-input>
-                    <q-input stack-label="Level" v-model="selected.level"
-                             type="number" min="1"
-                             :after="[{icon: 'add', handler () {selected.level += 1}}, {icon: 'remove', handler () {selected.level -= 1}}]"></q-input>
-                    <q-input stack-label="Stuff" v-model="selected.stuff"
-                             type="number" min="0"
-                             :after="[{icon: 'add', handler () {selected.stuff += 1}}, {icon: 'remove', handler () {selected.stuff -= 1}}]"></q-input>
-                    <q-input stack-label="Modifier" v-model="selected.modifier"
-                             type="number"
-                             :after="[{icon: 'add', handler () {selected.modifier += 1}}, {icon: 'remove', handler () {selected.modifier -= 1}}]"></q-input>
-                    <q-btn round @click="selected.switch()">{{ selected.sex }}</q-btn>
-                    <q-btn round icon="delete_forever" @click="removePlayer()"></q-btn>
-                </form>
+                <form-player :player="selected"></form-player>
             </q-page-container>
 
             <!-- optional -->
@@ -111,6 +98,24 @@
             </q-layout-footer>
         </q-layout>
     </div>
+
+    <template id="form-player-component">
+        <form class="selected-player" v-if="player">
+            <q-color stack-label="Color" v-model="player.color"></q-color>
+            <q-input stack-label="Name" v-model="player.name"></q-input>
+            <q-input stack-label="Level" v-model="player.level"
+                     type="number" min="1"
+                     :after="levelInput"></q-input>
+            <q-input stack-label="Stuff" v-model="player.stuff"
+                     type="number" min="0"
+                     :after="stuffInput"></q-input>
+            <q-input stack-label="Modifier" v-model="player.modifier"
+                     type="number"
+                     :after="modifierInput"></q-input>
+            <q-btn round @click="player.switch()">{{ player.sex }}</q-btn>
+            <q-btn round icon="delete_forever" @click="remove()"></q-btn>
+        </form>
+    </template>
 
 </body>
 </html>
