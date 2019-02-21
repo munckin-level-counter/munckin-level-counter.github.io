@@ -114,6 +114,7 @@
                      :after="modifierInput"></q-input>
             <q-btn round @click="player.switch()">{{ player.sex }}</q-btn>
             <q-btn round icon="delete_forever" @click="remove()"></q-btn>
+            <slot></slot>
         </form>
     </template>
 
