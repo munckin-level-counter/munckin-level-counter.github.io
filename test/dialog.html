@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<script src="../ui/Prompt.class.js"></script>
+<script src="../WebRTC-P2P.js"></script>
+<script>
+    prompter = Prompt.get();
+
+    p2p = new P2P({
+      displayOffer: offer => prompter.prompt(
+        'Copy paste the text below and send it to your friend',
+        'Send invitation',
+        JSON.stringify(offer),
+      ),
+      getOffer: () => prompter.prompt(
+          'Paste text from your friend below',
+          'Accept invitation',
+        ).then(offer => new RTCSessionDescription(JSON.parse(offer))),
+      displayAnswer: answer => prompter.prompt(
+        'Copy paste the text below and send it to your friend',
+        'Confirm you accept invitation',
+        JSON.stringify(answer)
+      ),
+      getAnswer: () => prompter.prompt(
+        'Paste text from your friend below',
+        'Accept confirmation of your friend',
+      ).then(offer => new RTCSessionDescription(JSON.parse(offer)))
+    });
+
+    p2p.receive('data', console.log);
+
+    function invite() {
+      p2p.invite()
+        .then(() => p2p.send(`Hello bob, I'm Alice`))
+    }
+
+    function join() {
+      p2p.join()
+        .then(() => p2p.send(`Hello Alice, I'm bob`))
+    }
+</script>
+</body>
+</html>

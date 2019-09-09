@@ -1,6 +1,27 @@
-class WebRTCp2p {
-  constructor(displayOffer, getAnswer, getOffer, displayAnswer) {
-    this.peers = new Set();
+class P2P {
+  static get defaults() {
+    return {
+      displayOffer: P2P.defaultDisplayOffer,
+      getOffer: P2P.defaultGetOffer,
+      displayAnswer: P2P.defaultDisplayOffer,
+      getAnswer: P2P.defaultGetOffer,
+    }
+  }
+
+  static get defaultDisplayOffer() {
+    return description => alert(JSON.stringify(description));
+  }
+
+  static get defaultGetOffer() {
+    const offer = prompt('offer');
+
+    return new RTCSessionDescription(JSON.parse(offer));
+  }
+
+  constructor({ displayOffer=P2P.defaultDisplayOffer, getAnswer=P2P.defaultGetOffer,
+                getOffer=P2P.defaultGetOffer, displayAnswer=P2P.defaultDisplayOffer }={}) {
+    this.peer = null;
+    this.messagesHandlers = new Map();
 
     this.displayOffer = displayOffer;
     this.getAnswer = getAnswer;
@@ -8,6 +29,9 @@ class WebRTCp2p {
     this.displayAnswer = displayAnswer;
   }
 
+  /**
+   * @returns {Promise<{peer: RTCPeerConnection, channel: RTCDataChannel}>}
+   */
   async invite() {
     const peer = new RTCPeerConnection({iceServers: [{urls: []}]});
     peer.channels = new Map();
@@ -23,7 +47,7 @@ class WebRTCp2p {
       state = 6; console.log('OK all set');
     }
 
-    peer.addEventListener('datachannel', event => peer.channels.set(event.channel.label, event.channel));
+    this._handleChannel(peer);
     peer.channels.set('data', peer.createDataChannel('data'));
 
     peer.addEventListener('icecandidate', e => e.candidate || handshake().catch(console.error));
@@ -33,11 +57,13 @@ class WebRTCp2p {
 
     await handshake();
 
-    this.peers.add(peer);
-
-    return peer;
+    this.peer = peer;
+    return {peer, channel: peer.channels.get('data')};
   }
 
+  /**
+   * @returns {Promise<{peer: RTCPeerConnection, channel: RTCDataChannel}>}
+   */
   async join() {
     const peer = new RTCPeerConnection({iceServers: [{urls: []}]});
     peer.channels = new Map();
@@ -51,7 +77,7 @@ class WebRTCp2p {
       state = 6; console.log('OK all set');
     }
 
-    peer.addEventListener('datachannel', event => peer.channels.set(event.channel.label, event.channel));
+    this._handleChannel(peer);
 
     peer.addEventListener('icecandidate', e => e.candidate || handshake().catch(console.error));
 
@@ -62,15 +88,59 @@ class WebRTCp2p {
 
     await handshake();
 
-    this.peers.add(peer);
+    const channel = await new Promise(resolve => {
+      if (peer.channels.has('data')) {
+        return resolve(peer.channels.get('data'));
+      }
 
-    return peer;
+      function checkDataChannel(event) {
+        if (event.channel.label !== 'data') return;
+
+        peer.removeEventListener('datachannel', checkDataChannel);
+        return resolve(event.channel);
+      }
+
+      peer.addEventListener('datachannel', checkDataChannel);
+    });
+
+    this.peer = peer;
+    return {peer, channel};
+  }
+
+  _handleChannel(peer) {
+    peer.addEventListener('datachannel', event => peer.channels.set(event.channel.label, event.channel));
+
+    peer.addEventListener('datachannel', event => {
+      const channel = event.channel;
+
+      peer.channels.set(channel.label, channel);
+      channel.addEventListener('message', event => {
+        const message = event.data;
+
+        this.messagesHandlers.has(channel.label) || this.messagesHandlers.set(channel.label, []);
+        for (const callback of this.messagesHandlers.get(channel.label)) {
+          try {
+            callback(message, {channel, event, peer});
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      });
+    });
+  }
+
+  send(message, channel = 'data') {
+    this.peer.channels.get(channel).send(message);
   }
 
   /**
-   * broadcast message to all peers
+   * register a message handler on channel
+   * @param {string} channel
+   * @param {function} callback - take on argument : message, {channel, peer, event}
    */
-  send(message, channel = 'data') {
-    this.peers.forEach(peer => peer.channels.get(channel).send(message))
+  receive(channel, callback) {
+    this.messagesHandlers.has(channel) || this.messagesHandlers.set(channel, []);
+
+    this.messagesHandlers.get(channel).push(callback);
   }
 }
